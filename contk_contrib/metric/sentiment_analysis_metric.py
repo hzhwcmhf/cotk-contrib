@@ -30,20 +30,24 @@ class AspectBasedSentimentAnlysisMetric(MetricBase):
 
 	def close(self):
 		res = {}
-		res["aspect_prec"] = self.TP / self.PN
-		res["aspect_reca"] = self.TP / self.RN
+		res["aspect_prec"] = self.TP / (self.PN + 1e-10)
+		res["aspect_reca"] = self.TP / (self.RN + 1e-10)
 		if self.PN == 0:
 			res["aspect_prec"] = 0
 		if self.RN == 0:
 			res["aspect_reca"] = 0
 		res["aspect_F1"] = 2 * res["aspect_prec"] * res["aspect_reca"] / \
-								(res["aspect_prec"] + res["aspect_reca"])
+								(res["aspect_prec"] + res["aspect_reca"] + 1e-10)
 		if self.TP == 0:
 			res["aspect_F1"] = 0
-		res["polarity_acc"] = self.polarity_right_num / self.polarity_all_num
+		res["polarity_acc"] = self.polarity_right_num / (self.polarity_all_num + 1e-10)
 		return res
 
 class AspectBasedSentimentAnlysisHardMetric(AspectBasedSentimentAnlysisMetric):
+	def __init__(self, dataloader):
+		super().__init__(dataloader)
+		self.num = 0
+
 	def forward(self, data):
 		labels = data[self.label_key]
 		predicts = data[self.predict_key]
@@ -54,17 +58,20 @@ class AspectBasedSentimentAnlysisHardMetric(AspectBasedSentimentAnlysisMetric):
 		hard_mask = np.zeros((labels.shape[0], 1))
 		for i, label in enumerate(labels):
 			hard_mask[i] = np.sum(np.bincount(label)[1:] != 0) > 1
+		self.num += np.sum(hard_mask)
 		self.TP += np.sum(np.logical_and(labels != 0, predicts != 0) * hard_mask)
 		self.PN += np.sum((predicts != 0) * hard_mask)
 		self.RN += np.sum((labels != 0) * hard_mask)
 		self.polarity_right_num += np.sum(\
-				(np.sum(predicts_force == labels, 1, keepdims=True) == \
+				(np.sum(labels == predicts_force , 1, keepdims=True) == \
 				np.sum(labels != 0, 1, keepdims=True)) * hard_mask)
 		self.polarity_all_num += np.sum(hard_mask)
 
 	def close(self):
 		res = super().close()
-		return {"hard_" + key: value for key, value in res.items()}
+		res = {"hard_" + key: value for key, value in res.items()}
+		res["hard_num"] = self.num
+		return res
 
 
 class AspectBasedSentimentAnlysisOutofDomainMetric(MetricBase):
@@ -91,12 +98,12 @@ class AspectBasedSentimentAnlysisOutofDomainMetric(MetricBase):
 
 	def close(self):
 		res = {}
-		res["ood_prec"] = self.TP / self.PN
-		res["ood_reca"] = self.TP / self.RN
+		res["ood_prec"] = self.TP / (self.PN + 1e-10)
+		res["ood_reca"] = self.TP / (self.RN + 1e-10)
 		if self.PN == 0:
 			res["ood_prec"] = 0
 		if self.RN == 0:
 			res["ood_reca"] = 0
 		res["ood_F1"] = 2 * res["ood_prec"] * res["ood_reca"] / \
-								(res["ood_prec"] + res["ood_reca"])
+								(res["ood_prec"] + res["ood_reca"] + 1e-10)
 		return res

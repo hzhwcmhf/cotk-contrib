@@ -82,6 +82,7 @@ class SentimentAnalysis(Dataloader):
 		res["sent"] = np.zeros((batch_size, np.max(res["sent_length"])), dtype=int)
 		res["low_aspect"] = np.array(list(map(lambda i: self.data[key]['low_aspect'][i], index)))
 		res["high_aspect"] = np.array(list(map(lambda i: self.data[key]['high_aspect'][i], index)))
+		res['hint'] = list(map(lambda i: self.data[key]['hint'][i], index))
 		for i, j in enumerate(index):
 			sent = self.data[key]['sent'][j]
 			res["sent"][i, :len(sent)] = sent
@@ -146,7 +147,7 @@ class SentimentAnalysis(Dataloader):
 			* fix the missing example
 		'''
 
-		index = trim_before_target(list(index), self.eos_id)
+		#index = trim_before_target(list(index), self.eos_id)
 		idx = len(index)
 		while index[idx-1] == self.pad_id:
 			idx -= 1
@@ -206,7 +207,7 @@ class SemEvalABSA(SentimentAnalysis):
 					for aspect_node in node:
 						category = aspect_node.attrib['category'].lower() + "#"
 						category = _mapping_from14to15.get(category, category)
-						sample["label"][category] = (aspect_node.attrib['polarity'], None, None)
+						sample["label"][category] = (aspect_node.attrib['polarity'], None, None, None)
 			if "label" not in sample:
 				raise ValueError("data error, category not found")
 			res.append(sample)
@@ -220,14 +221,16 @@ class SemEvalABSA(SentimentAnalysis):
 				sample = {"label": {}}  # some text may don't have any label
 				for node in sentence_node:
 					if node.tag == "text":
+						sample['origin_text'] = node.text.lower()
 						sample["text"] = word_tokenize(node.text.lower().replace("&apos;", "'"))
 					elif node.tag == "Opinions":
 						for aspect_node in node:
 							category = aspect_node.attrib['category'].lower()
-							from_pos = aspect_node.attrib["from"]
-							to_pos = aspect_node.attrib["to"]
+							from_pos = int(aspect_node.attrib["from"])
+							to_pos = int(aspect_node.attrib["to"])
+							hint = sample['origin_text'][from_pos:to_pos]
 							sample["label"][category] = \
-								(aspect_node.attrib['polarity'], from_pos, to_pos)
+								(aspect_node.attrib['polarity'], from_pos, to_pos, hint)
 				res.append(sample)
 		return res
 
@@ -285,7 +288,8 @@ class SemEvalABSA(SentimentAnalysis):
 			now_data['cut_num'] = max(0, len(sample['text']) - self._max_sen_length + 1)
 			now_data['low_aspect'] = np.zeros((self.low_aspect_size), dtype=int)
 			now_data['high_aspect'] = np.zeros((self.high_aspect_size), dtype=int)
-			for low_label, (po, frompos, topos) in sample['label'].items():
+			now_data['hint'] = [None for i in range(self.low_aspect_size)]
+			for low_label, (po, frompos, topos, hint) in sample['label'].items():
 				high_label = low_label.split("#")[0]
 				po_id = polarity.index(po)
 
@@ -296,11 +300,12 @@ class SemEvalABSA(SentimentAnalysis):
 				high_id = high_aspect.index(high_label)
 				now_data['high_aspect'][high_id] = po_id
 				#TODO: how to use frompos & topos
+				now_data['hint'][low_id] = (frompos, topos, hint)
 			return now_data
 
 		data = {}
 		for key in self.key_name:
-			attr_list = ["sent", "low_aspect", "high_aspect", "vocab_num", "oov_num", "cut_num"]
+			attr_list = ["sent", "low_aspect", "high_aspect", "vocab_num", "oov_num", "cut_num", "hint"]
 			data[key] = {key: [] for key in attr_list}
 			for sample in self.origin_data[key]:
 				sample = _process(sample)
@@ -318,7 +323,7 @@ class SemEvalABSA(SentimentAnalysis):
 		return len(self.low_aspect)
 	@property
 	def high_aspect_size(self):
-		return len(self.low_aspect)
+		return len(self.high_aspect)
 	@property
 	def polarity_size(self):
 		return len(self.polarity)
@@ -329,3 +334,27 @@ class SemEvalABSA(SentimentAnalysis):
 		metric.add_metric(AspectBasedSentimentAnlysisHardMetric(self))
 		metric.add_metric(AspectBasedSentimentAnlysisOutofDomainMetric(self))
 		return metric
+
+	def get_statistics(self):
+		print("vocab size: %d" % self.vocab_size)
+		print("aspect size: %d" % self.low_aspect_size)
+		print("aspect: %s" % self.low_aspect)
+		print("polarity size: %d" % self.polarity_size)
+		print("polarity: %s" % self.polarity)
+
+		def _get_statistics(key):
+			print("Set %s" % key)
+			# res["low_aspect"] = np.array(list(map(lambda i: self.data[key]['low_aspect'][i], index)))
+			num = 0
+			hard_num = 0
+			for i in range(len(self.data[key]['low_aspect'])):
+				label = self.data[key]['low_aspect'][i]
+				num += 1
+				hard_num += np.sum(np.bincount(label)[1:] != 0) > 1
+			print("\tnum: %d" % num)
+			print("\thard num: %d" % hard_num)
+
+		_get_statistics("train")
+		_get_statistics("dev")
+		_get_statistics("test")
+	
