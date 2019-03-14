@@ -1,8 +1,8 @@
 import numpy as np
 
-from contk.metric import MetricBase
+from cotk.metric import MetricBase
 
-class AspectBasedSentimentAnlysisMetric(MetricBase):
+class AspectBasedSentimentAnalysisMetric(MetricBase):
 	def __init__(self, dataloader):
 		super().__init__()
 		self.dataloader = dataloader
@@ -43,7 +43,7 @@ class AspectBasedSentimentAnlysisMetric(MetricBase):
 		res["polarity_acc"] = self.polarity_right_num / (self.polarity_all_num + 1e-10)
 		return res
 
-class AspectBasedSentimentAnlysisHardMetric(AspectBasedSentimentAnlysisMetric):
+class AspectBasedSentimentAnalysisHardMetric(AspectBasedSentimentAnalysisMetric):
 	def __init__(self, dataloader):
 		super().__init__(dataloader)
 		self.num = 0
@@ -74,7 +74,7 @@ class AspectBasedSentimentAnlysisHardMetric(AspectBasedSentimentAnlysisMetric):
 		return res
 
 
-class AspectBasedSentimentAnlysisOutofDomainMetric(MetricBase):
+class AspectBasedSentimentAnalysisOutofDomainMetric(MetricBase):
 	def __init__(self, dataloader):
 		super().__init__()
 		self.dataloader = dataloader

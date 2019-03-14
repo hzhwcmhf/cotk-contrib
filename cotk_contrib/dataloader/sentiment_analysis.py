@@ -5,13 +5,13 @@ import random
 import xml.etree.ElementTree as ET
 import numpy as np
 from nltk.tokenize import word_tokenize
-from contk.dataloader import Dataloader
-from contk._utils import trim_before_target
-from contk.metric import MetricChain
+from cotk.dataloader import Dataloader
+from cotk._utils import trim_before_target
+from cotk.metric import MetricChain
 
-from ..metric import AspectBasedSentimentAnlysisMetric, \
-					AspectBasedSentimentAnlysisHardMetric, \
-					AspectBasedSentimentAnlysisOutofDomainMetric
+from ..metric import AspectBasedSentimentAnalysisMetric, \
+					AspectBasedSentimentAnalysisHardMetric, \
+					AspectBasedSentimentAnalysisOutofDomainMetric
 
 class SentimentAnalysis(Dataloader):
 	def __init__(self,		\
@@ -330,9 +330,9 @@ class SemEvalABSA(SentimentAnalysis):
 
 	def get_metric(self):
 		metric = MetricChain()
-		metric.add_metric(AspectBasedSentimentAnlysisMetric(self))
-		metric.add_metric(AspectBasedSentimentAnlysisHardMetric(self))
-		metric.add_metric(AspectBasedSentimentAnlysisOutofDomainMetric(self))
+		metric.add_metric(AspectBasedSentimentAnalysisMetric(self))
+		metric.add_metric(AspectBasedSentimentAnalysisHardMetric(self))
+		metric.add_metric(AspectBasedSentimentAnalysisOutofDomainMetric(self))
 		return metric
 
 	def get_statistics(self):

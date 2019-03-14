@@ -1,6 +1,6 @@
 import numpy as np
 
-from contk.metric import MetricBase
+from cotk.metric import MetricBase
 
 class LanguageGenerationProbabilityRecorder(MetricBase):
 	'''A metric-like class for recorder BLEU.

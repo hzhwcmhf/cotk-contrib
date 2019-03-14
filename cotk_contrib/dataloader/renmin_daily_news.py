@@ -6,9 +6,9 @@ import re
 
 import numpy as np
 from nltk.tokenize import word_tokenize
-from contk.dataloader import Dataloader, LanguageGeneration
-from contk._utils import trim_before_target
-from contk.metric import MetricChain, PerlplexityMetric, \
+from cotk.dataloader import Dataloader, LanguageGeneration
+from cotk._utils import trim_before_target
+from cotk.metric import MetricChain, PerlplexityMetric, \
 						LanguageGenerationRecorder
 
 from ..metric import LanguageGenerationProbabilityRecorder
