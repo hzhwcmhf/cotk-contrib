@@ -8,7 +8,7 @@ import numpy as np
 from nltk.tokenize import word_tokenize
 from cotk.dataloader import Dataloader, LanguageGeneration
 from cotk._utils import trim_before_target
-from cotk.metric import MetricChain, PerlplexityMetric, \
+from cotk.metric import MetricChain, PerplexityMetric, \
 						LanguageGenerationRecorder
 
 from ..metric import LanguageGenerationProbabilityRecorder
@@ -71,12 +71,12 @@ class RenminDailyNews(LanguageGeneration):
 					(key, oov_num / vocab_num, max(length), cut_num / vocab_num))
 		return vocab_list, data
 
-	def get_metric(self, gen_prob_key="gen_prob"):
+	def get_metric(self, gen_log_prob_key="gen_prob"):
 		metric = MetricChain()
-		metric.add_metric(PerlplexityMetric(self,
-								 data_key='sentence',
-								 data_len_key='sentence_length',
-								 gen_prob_key=gen_prob_key))
-		metric.add_metric(LanguageGenerationRecorder(self, sentence_key='sentence'))
-		metric.add_metric(LanguageGenerationProbabilityRecorder(self, sentence_len_key='sentence_length', gen_prob_key=gen_prob_key))
+		metric.add_metric(PerplexityMetric(self,
+								 reference_allvocabs_key='sent_allvocabs',
+								 reference_len_key='sent_length',
+								 gen_log_prob_key=gen_log_prob_key))
+		metric.add_metric(LanguageGenerationRecorder(self, gen_key='sent'))
+		metric.add_metric(LanguageGenerationProbabilityRecorder(self, sentence_len_key='sent_length', gen_prob_key=gen_log_prob_key))
 		return metric
