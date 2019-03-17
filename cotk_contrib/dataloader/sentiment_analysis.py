@@ -62,7 +62,7 @@ class SentimentAnalysis(Dataloader):
 		if key not in self.key_name:
 			raise ValueError("No set named %s." % key)
 		if batch_size is None and self.batch_size[key] is None:
-			raise ValueError("You need batch_size to intialize.")
+			raise ValueError("You need batch_size to initialize.")
 		if shuffle:
 			random.shuffle(self.index[key])
 
@@ -132,7 +132,7 @@ class SentimentAnalysis(Dataloader):
 
 	def trim_index(self, index):
 		'''Trim index. There will be two steps:
-			* find first `<eos>` and abondon words after it (included the `<eos>`).
+			* find first `<eos>` and abandon words after it (included the `<eos>`).
 			* ignore `<pad>` s at the end of the sentence.
 
 		Arguments:
