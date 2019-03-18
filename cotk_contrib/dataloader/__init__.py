@@ -7,5 +7,7 @@ your model from one dataset to other datasets.
 
 from .sentiment_analysis import SentimentAnalysis
 from .renmin_daily_news import RenminDailyNews
+from .skeleton_generation import SkeletonGeneration
+from .skeleton_to_story import SkeletonToStory
 
-__all__ = ['SentimentAnalysis', 'RenminDailyNews']
+__all__ = ['SentimentAnalysis', 'RenminDailyNews', "SkeletonGeneration", "SkeletonToStory"]
